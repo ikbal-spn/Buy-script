@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Script Bot WhatsApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bot-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .qris-container {
+            margin: 30px 0;
+            animation: fadeIn 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .qris-image {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 3px solid #f0f0f0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .qris-image:hover {
+            transform: scale(1.05);
+        }
+
+        .amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #25D366;
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .payment-steps {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            animation: slideIn 0.8s ease-out 0.8s both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .payment-steps h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .payment-steps ol {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .payment-steps li {
+            margin-bottom: 8px;
+        }
+
+        .confirm-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+        }
+
+        .confirm-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            margin: 50px auto;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            animation: modalSlide 0.5s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #c3e6cb;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+            animation: shake 0.5s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .loading {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .payment-container {
+                padding: 20px;
+            }
+            
+            .qris-image {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .amount {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <!-- Bot Logo -->
+        <div class="bot-logo">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="#25D366"/>
+                <path d="M25 75 L50 50 L75 75 Z" fill="white"/>
+                <circle cx="35" cy="35" r="8" fill="white"/>
+                <circle cx="65" cy="35" r="8" fill="white"/>
+                <path d="M35 60 Q50 70 65 60" stroke="white" stroke-width="3" fill="none"/>
+            </svg>
+        </div>
+
+        <h1 class="title">Script Bot WhatsApp Otomatis</h1>
+        <p class="subtitle">Pembayaran untuk Script Bot Pembuat Grup Otomatis</p>
+
+        <!-- QRIS Image -->
+        <div class="qris-container">
+            <img src="https://files.catbox.moe/bh8ko9.jpg" alt="QRIS Code" class="qris-image">
+        </div>
+
+        <!-- Payment Amount -->
+        <div class="amount">Rp 15.000</div>
+
+        <!-- Payment Instructions -->
+        <div class="payment-steps">
+            <h3>Tata Cara Pembayaran</h3>
+            <ol>
+                <li>Scan QR Code di atas menggunakan aplikasi pembayaran Anda</li>
+                <li>Pastikan nominal pembayaran sebesar Rp 15.000</li>
+                <li>Selesaikan pembayaran</li>
+                <li>Klik tombol "Konfirmasi Pembayaran" di bawah</li>
+                <li>Pilih metode pengiriman script (WhatsApp/Email)</li>
+                <li>Script akan dikirim dalam waktu 1x24 jam</li>
+            </ol>
+        </div>
+
+        <!-- Confirm Button -->
+        <button class="confirm-btn" onclick="openModal()">Konfirmasi Pembayaran</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Konfirmasi Pembayaran</h2>
+            
+            <div class="input-group">
+                <label for="deliveryMethod">Metode Pengiriman Script:</label>
+                <select id="deliveryMethod" required>
+                    <option value="">Pilih metode pengiriman</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="email">Email</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="contactGroup">
+                <label for="contactInfo" id="contactLabel">Nomor WhatsApp/Email:</label>
+                <input type="text" id="contactInfo" placeholder="Masukkan nomor WhatsApp atau email" required>
+            </div>
+
+            <div class="input-group">
+                <label for="paymentProof">Bukti Pembayaran (Opsional):</label>
+                <input type="text" id="paymentProof" placeholder="Screenshot atau ID transaksi">
+            </div>
+
+            <button class="send-btn" onclick="sendNotification()">Kirim Konfirmasi</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Mengirim notifikasi...</p>
+            </div>
+            
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Update contact label based on delivery method
+        document.getElementById('deliveryMethod').addEventListener('change', function() {
+            const method = this.value;
+            const label = document.getElementById('contactLabel');
+            const input = document.getElementById('contactInfo');
+            
+            if (method === 'whatsapp') {
+                label.textContent = 'Nomor WhatsApp:';
+                input.placeholder = 'Contoh: 628123456789';
+                input.type = 'tel';
+            } else if (method === 'email') {
+                label.textContent = 'Alamat Email:';
+                input.placeholder = 'Contoh: nama@email.com';
+                input.type = 'email';
+            } else {
+                label.textContent = 'Nomor WhatsApp/Email:';
+                input.placeholder = 'Masukkan nomor WhatsApp atau email';
+                input.type = 'text';
+            }
+        });
+
+        function openModal() {
+            document.getElementById('confirmModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            // Reset form
+            document.getElementById('deliveryMethod').value = '';
+            document.getElementById('contactInfo').value = '';
+            document.getElementById('paymentProof').value = '';
+            document.getElementById('message').innerHTML = '';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        function validateForm() {
+            const deliveryMethod = document.getElementById('deliveryMethod').value;
+            const contactInfo = document.getElementById('contactInfo').value.trim();
+            
+            if (!deliveryMethod) {
+                showError('Silakan pilih metode pengiriman script.');
+                return false;
+            }
+            
+            if (!contactInfo) {
+                showError('Silakan masukkan nomor WhatsApp atau email.');
+                return false;
+            }
+            
+            // Validate WhatsApp number
+            if (deliveryMethod === 'whatsapp') {
+                const phoneRegex = /^(\+?62|0)[0-9]{8,13}$/;
+                if (!phoneRegex.test(contactInfo)) {
+                    showError('Format nomor WhatsApp tidak valid. Contoh: 628123456789');
+                    return false;
+                }
+            }
+            
+            // Validate email
+            if (deliveryMethod === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(contactInfo)) {
+                    showError('Format email tidak valid.');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function showError(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="success-message">${message}</div>`;
+        }
+
+        async function sendNotification() {
+            if (!validateForm()) return;
+            
+            const deliveryMethod = document.getElementById('deliveryMethod').value;
+            const contactInfo = document.getElementById('contactInfo').value.trim();
+            const paymentProof = document.getElementById('paymentProof').value.trim();
+            
+            const sendBtn = document.querySelector('.send-btn');
+            const loading = document.getElementById('loading');
+            
+            sendBtn.disabled = true;
+            loading.style.display = 'block';
+            document.getElementById('message').innerHTML = '';
+            
+            const botToken = '7484714799:AAHiHT8vJrTfrMyxQoqbThewRFNhuG8h2Os';
+            const adminId = '6144972538';
+            
+            const message = `🔔 *NOTIFIKASI PEMBAYARAN SCRIPT BOT*\n\n` +
+                          `💰 **Produk**: Script Bot WhatsApp Otomatis\n` +
+                          `💵 **Jumlah**: Rp 15.000\n` +
+                          `📧 **Metode Pengiriman**: ${deliveryMethod === 'whatsapp' ? 'WhatsApp' : 'Email'}\n` +
+                          `📱 **Kontak**: ${contactInfo}\n` +
+                          `🧾 **Bukti Pembayaran**: ${paymentProof || 'Tidak disertakan'}\n` +
+                          `⏰ **Waktu**: ${new Date().toLocaleString('id-ID')}\n\n` +
+                          `_Silakan proses pesanan ini segera._`;
+            
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: adminId,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    showSuccess('✅ Konfirmasi pembayaran berhasil dikirim! Admin akan segera memproses pesanan Anda.');
+                    setTimeout(() => {
+                        closeModal();
+                    }, 3000);
+                } else {
+                    throw new Error(data.description || 'Gagal mengirim notifikasi');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('❌ Terjadi kesalahan saat mengirim konfirmasi. Silakan coba lagi atau hubungi admin langsung.');
+            } finally {
+                sendBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe elements for animation
+            document.querySelectorAll('.payment-steps, .confirm-btn').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
